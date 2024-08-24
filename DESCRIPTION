@@ -1,0 +1,12 @@
+Package: tstools
+Type: Package
+Title: Time series tools
+Version: 0.919
+Imports: forecast, sandwich, msm
+Date: 2024-03-15
+Author: Lance Bachmeier
+Maintainer: Lance Bachmeier <lanceb@ksu.edu>
+Description: Some tools that make working with time series data easier
+License: GPL (>= 2)
+LazyLoad: yes
+LazyData: true

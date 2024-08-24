@@ -1,7 +1,3 @@
-## vcovHC is not exported as an S3 method
-## Have to import the full sandwich package
-import(sandwich)
-
 export(lags,
        first,
        last,

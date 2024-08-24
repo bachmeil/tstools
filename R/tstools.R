@@ -457,7 +457,7 @@ stepwise.selection <- function(y, x, crit=BIC) {
 
 ## Return dynlm output for White corrected standard errors
 white.correction <- function(fit) {
-  se.corrected <- sqrt(diag(vcovHC(fit)))
+  se.corrected <- sqrt(diag(sandwich::vcovHC(fit)))
   coef <- coefficients(fit)
   tstats <- coef/se.corrected
   result <- cbind(coef, se.corrected, tstats)
@@ -468,7 +468,7 @@ white.correction <- function(fit) {
 
 ## Return lm output for Newey-West corrected standard errors
 nw.correction <- function(fit) {
-  se.corrected <- sqrt(diag(NeweyWest(fit)))
+  se.corrected <- sqrt(diag(sandwich::NeweyWest(fit)))
   coef <- coefficients(fit)
   tstats <- coef/se.corrected
   result <- cbind(coef, se.corrected, tstats)

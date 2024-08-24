@@ -478,7 +478,7 @@ nw.correction <- function(fit) {
 }
 
 nw.cov <- function(fit) {
-  return(NeweyWest(fit))
+  return(sandwich::NeweyWest(fit))
 }
 
 ## na.omit inserts $na.action attribute, messing up calls to dynlm
@@ -1480,36 +1480,6 @@ iterate <- function(fmat, start, h, cumulate="none") {
     stop("iterate requires cumulate to be 'none', 'rows', or 'cols'. Try again.")
   }
 } 
-
-# name: Name of the file downloaded from FRED
-# Has to be default format CSV file, including header
-# Returns ts object with correct frequency and dates
-import.fred <- function(name) {
-  f <- file(name)
-  lines <- readLines(f, n=3)
-  close(f)
-  year1 <- as.integer(substr(lines[2], 1, 4))
-  month1 <- as.integer(substr(lines[2], 6, 7))
-  year2 <- as.integer(substr(lines[3], 1, 4))
-  month2 <- as.integer(substr(lines[3], 6, 7))
-  data.raw <- read.csv(name, header=TRUE)
-  
-  if (year2 > year1) {
-    if (month1 == 1) {
-      return(ts(data.raw[,2], frequency=1, start=year1))
-    } else if (month1 == 10) {
-      return(ts(data.raw[,2], frequency=4, start=c(year1, (month1 + 2) %/% 3)))
-    } else if (month1 == 12) {
-      return(ts(data.raw[,2], frequency=12, start=c(year1, month1)))
-    }
-  } else {
-    if ((month2 - month1) == 1) {
-      return(ts(data.raw[,2], frequency=12, start=c(year1, month1)))
-    } else if ((month2 - month1) == 3) {
-      return(ts(data.raw[,2], frequency=4, start=c(year1, (month1 + 2) %/% 3)))
-    }
-  }
-}
 
 # Returns a copy of x that matches the dates in y
 # x will start at the later of the start dates of x and y

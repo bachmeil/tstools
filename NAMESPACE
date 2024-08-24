@@ -106,7 +106,6 @@ export(lags,
        "%q-%",
        "oosForecasts",
        "formF",
-       "import.fred",
        "trim.dates",
        "%~%",
        "%~%.ts",
@@ -114,6 +113,8 @@ export(lags,
        "draw.pair",
        "hstep",
        "graph.dates",
+
+       "import.fred",
        "import.tsformat"
       )
 S3method(vec, list)

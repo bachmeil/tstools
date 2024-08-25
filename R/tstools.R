@@ -421,19 +421,30 @@ quarter.dummy <- function(x, omit=1) {
   return(ts(result, start=start(x), frequency=4))
 }
 
-dummy.after <- function(d, n, omit=1) {
-	tmp <- ts(1:k, start=end(lag(d,-1)), frequency=frequency(d))
-	if (frequency(d) == 4) {
-		return(quarter.dummy(tmp))
-	} else if (frequency(d) == 12) {
-		return(month.dummy(tmp))
+dummy.after <- function(x, n, omit=1) {
+	tmp <- ts(1:n, start=end(lag(x,-1)), frequency=frequency(x))
+	if (frequency(x) == 4) {
+		return(quarter.dummy(tmp, omit))
+	} else if (frequency(x) == 12) {
+		return(month.dummy(tmp, omit))
 	} else {
 		stop("dummy.after only works with monthly or quarterly series")
 	}
 }
 
+seasonal.dummy <- function(x, omit=1) {
+	if (!inherits(x, "ts")) { stop("In seasonal.dummy, x has to be a ts or mts object") }
+	if (frequency(x) == 4) {
+		return(quarter.dummy(x, omit))
+	} else if (frequency(x) == 12) {
+		return(month.dummy(x, omit))
+	} else {
+		stop("seasonal.dummy only works with monthy or quarterly time series.")
+	}
+}
+
 trend.after <- function(x, n, k=1) {
-	tmp <- ts(1:k, start=end(lag(x,-1)), frequency=frequency(x))
+	tmp <- ts(1:n, start=end(lag(x,-1)), frequency=frequency(x))
 	return(make.trend(tmp, k))
 }
 

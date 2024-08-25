@@ -116,6 +116,7 @@ export(lags,
        
        "dummy.after",
        "trend.after",
+       "seasonal.dummy",
 
        "import.fred",
        "import.tsformat"

@@ -421,6 +421,22 @@ quarter.dummy <- function(x, omit=1) {
   return(ts(result, start=start(x), frequency=4))
 }
 
+dummy.after <- function(d, n, omit=1) {
+	tmp <- ts(1:k, start=end(lag(d,-1)), frequency=frequency(d))
+	if (frequency(d) == 4) {
+		return(quarter.dummy(tmp))
+	} else if (frequency(d) == 12) {
+		return(month.dummy(tmp))
+	} else {
+		stop("dummy.after only works with monthly or quarterly series")
+	}
+}
+
+trend.after <- function(x, n, k=1) {
+	tmp <- ts(1:k, start=end(lag(x,-1)), frequency=frequency(x))
+	return(make.trend(tmp, k))
+}
+
 ## Select the best model by a criteria when dropping one of the variables
 best.drop <- function(y, x, crit) {
   compare <- function(previous, new) {

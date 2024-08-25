@@ -113,6 +113,9 @@ export(lags,
        "draw.pair",
        "hstep",
        "graph.dates",
+       
+       "dummy.after",
+       "trend.after",
 
        "import.fred",
        "import.tsformat"

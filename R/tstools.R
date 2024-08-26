@@ -522,6 +522,9 @@ BIC.Arima <- function(x) {
 # Shorthand for ts.combine
 `%~%` <- function(x, y) UseMethod("%~%")
 `%~%.ts` <- function(x, y) {
+  if (is.null(x)) {
+    return(y)
+  }
   result <- ts.combine(x, y)
   cn <- if (inherits(x, "mts")) {
     colnames(x)
@@ -535,6 +538,13 @@ BIC.Arima <- function(x) {
   }
   colnames(result) <- cn
   return(result)
+}
+`%~%.NULL` <- function(x, y) {
+  if (inherits(y, "ts")) {
+    return(y)
+  } else {
+    return(NULL)
+  }
 }
 
 ## Allow appending to the end of a ts object
@@ -1147,66 +1157,65 @@ mafit <- function(y, ma=0, auto=FALSE) {
 	return(armafit(y, 0, ma, auto))
 }
 
-arxfit <- function(y, xreg=NULL, ar=0, trend=0, seasonal=FALSE, auto=FALSE) {}
+arxfit <- function(y, xreg=NULL, ar=0, trend=0, seasonal=FALSE, auto=FALSE) {
+  return(armaxfit(y, xreg, ar, 0, trend, seasonal, auto))
+}
 
 armaxfit <- function(y, xreg=NULL, ar=0, ma=0, trend=0, seasonal=FALSE, auto=FALSE) {
 	if (auto) {
 		stop("auto is not yet implemented for armaxfit")
 	}
-	xreg.other <- !is.null(xreg)
+	xreg.arg <- !is.null(xreg)
 	if (trend > 0) {
-		if (is.null(xreg)) {
-			xreg <- make.trend(y, trend)
-		} else {
-			xreg <- xreg %~% make.trend(y, trend)
-		}
+    xreg <- xreg %~% make.trend(y, trend)
 	}
 	if (seasonal) {
-		if (is.null(xreg)) {
-			xreg <- seasonal.dummy(y)
-		} else {
-			xreg <- xreg %~% seasonal.dummy(y)
-		}
+    xreg <- xreg %~% seasonal.dummy(y)
 	}
 	if (is.null(xreg)) {
-		result <- list(fit=arima(x, order=c(ar, 0, ma)))
+		result <- list(fit=arima(y, order=c(ar, 0, ma)))
 	} else {
-		result <- list(fit=arima(x, order=c(ar, 0, ma), xreg=xreg))
+    result <- list(fit=arima(y, order=c(ar, 0, ma), xreg=xreg))
+    # Needed due to weird scope games played by predict.Arima
+    # Otherwise it'll try to pull xreg from the parent environment
+    # which of course does not contain xreg once we leave this function
+    # If you check the source of stats:::predict.Arima
+    # xr <- object$call$xreg
+    # xreg <- if (!is.null(xr)) 
+    #    eval.parent(xr)
+    # So if I do this, it evaluates to itself
+    result$fit$call$xreg <- xreg
 	}
 	result$y <- y
 	result$ar <- ar
 	result$ma <- ma
-	result$xreg <- xreg.other
+	result$xreg <- xreg.arg
 	result$trend <- trend
 	result$seasonal <- seasonal
 	class(result) <- "armaxfit"
 	return(result)
 }
 
-predict.armaxfit <- function(obj, n.ahead, newxreg, ...) {
+predict.armaxfit <- function(obj, n.ahead, newxreg=NULL, ...) {
 	nxreg <- NULL
 	if (obj$xreg) {
 		nxreg <- newxreg
 	}
 	if (obj$trend > 0) {
-		if (is.null(nxreg)) {
-			nxreg <- trend.after(obj$y, n.ahead)
-		} else {
-			nxreg <- nxreg %~% trend.after(obj$y, n.ahead)
-		}
+    nxreg <- nxreg %~% trend.after(obj$y, n.ahead, obj$trend)
 	}
 	if (obj$seasonal) {
-		if (is.null(nxreg)) {
-			nxreg <- dummy.after(obj$y, n.ahead)
-		} else {
-			nxreg <- nxreg %~% dummy.after(obj$y, n.ahead)
-		}
+    nxreg <- nxreg %~% dummy.after(obj$y, n.ahead)
 	}
 	if (is.null(nxreg)) {
 		return(predict(obj$fit, n.ahead))
 	} else {
 		return(predict(obj$fit, n.ahead, newxreg=nxreg))
 	}
+}
+
+predictions <- function(...) {
+  return(predict(...)$pred)
 }
 
 print.arimafit <- function(f) {

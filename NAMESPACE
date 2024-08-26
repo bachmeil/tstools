@@ -86,7 +86,6 @@ export(lags,
        "armaCoef",
        "clearDate",
        "clearDates",
-       "armafit",
        "arma.select",
        "repeat.row",
        "repeat.col",
@@ -113,6 +112,12 @@ export(lags,
        "draw.pair",
        "hstep",
        "graph.dates",
+       "arfit",
+       "mafit",
+       "armafit",
+       "arxfit",
+       "armaxfit",
+       "predictions",
        
        "dummy.after",
        "trend.after",
@@ -126,5 +131,7 @@ S3method(forecast, dynlm)
 S3method(BIC, Arima)
 S3method(collect, list)
 S3method("%~%", ts)
+S3method("%~%", NULL)
 S3method(print, arimafit)
 S3method(predict, hstep)
+S3method(predict, armaxfit)

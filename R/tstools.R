@@ -1139,6 +1139,76 @@ armafit <- function(x, ar=0, ma=0, auto=FALSE) {
   return(result)
 }
 
+arfit <- function(y, ar=0, auto=FALSE) {
+	return(armafit(y, ar, 0, auto))
+}
+
+mafit <- function(y, ma=0, auto=FALSE) {
+	return(armafit(y, 0, ma, auto))
+}
+
+arxfit <- function(y, xreg=NULL, ar=0, trend=0, seasonal=FALSE, auto=FALSE) {}
+
+armaxfit <- function(y, xreg=NULL, ar=0, ma=0, trend=0, seasonal=FALSE, auto=FALSE) {
+	if (auto) {
+		stop("auto is not yet implemented for armaxfit")
+	}
+	xreg.other <- !is.null(xreg)
+	if (trend > 0) {
+		if (is.null(xreg)) {
+			xreg <- make.trend(y, trend)
+		} else {
+			xreg <- xreg %~% make.trend(y, trend)
+		}
+	}
+	if (seasonal) {
+		if (is.null(xreg)) {
+			xreg <- seasonal.dummy(y)
+		} else {
+			xreg <- xreg %~% seasonal.dummy(y)
+		}
+	}
+	if (is.null(xreg)) {
+		result <- list(fit=arima(x, order=c(ar, 0, ma)))
+	} else {
+		result <- list(fit=arima(x, order=c(ar, 0, ma), xreg=xreg))
+	}
+	result$y <- y
+	result$ar <- ar
+	result$ma <- ma
+	result$xreg <- xreg.other
+	result$trend <- trend
+	result$seasonal <- seasonal
+	class(result) <- "armaxfit"
+	return(result)
+}
+
+predict.armaxfit <- function(obj, n.ahead, newxreg, ...) {
+	nxreg <- NULL
+	if (obj$xreg) {
+		nxreg <- newxreg
+	}
+	if (obj$trend > 0) {
+		if (is.null(nxreg)) {
+			nxreg <- trend.after(obj$y, n.ahead)
+		} else {
+			nxreg <- nxreg %~% trend.after(obj$y, n.ahead)
+		}
+	}
+	if (obj$seasonal) {
+		if (is.null(nxreg)) {
+			nxreg <- dummy.after(obj$y, n.ahead)
+		} else {
+			nxreg <- nxreg %~% dummy.after(obj$y, n.ahead)
+		}
+	}
+	if (is.null(nxreg)) {
+		return(predict(obj$fit, n.ahead))
+	} else {
+		return(predict(obj$fit, n.ahead, newxreg=nxreg))
+	}
+}
+
 print.arimafit <- function(f) {
   print(f$par)
 }

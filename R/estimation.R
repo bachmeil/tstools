@@ -7,11 +7,17 @@ tslasso <- function(y, x) {
   fullDataset <- ts.combine(y, x)
   yvariable <- as.matrix(fullDataset[,1])
   xvariables <- as.matrix(fullDataset[,-1])
+  start <- start(fullDataset)
+  end <- end(fullDataset)
   cv <- glmnet::cv.glmnet(xvariables, yvariable)
   fit <- glmnet::glmnet(xvariables, yvariable)
-  predfn <- function(new.x) {
-    return(predict(fit, newx = new.x, s=cv$lambda.min))
+  fitvalue <- function() { return(fit) }
+  svalue <- function() { return(cv$lambda.min) }
+  predfn <- function(newx) {
+    return(ts(cbind(1, newx) %*% coef(fit, s=cv$lambda.min)[,1], 
+      start=start(newx), frequency=frequency(fullDataset)))
   }
-  return(list(fit=fit, lambda.min=cv$lambda.min, coef=coef(fit, s=cv$lambda.min),
-    predict=predfn))
+  result <- list(fit=fit, lambda.min=cv$lambda.min, coef=coef(fit, s=cv$lambda.min),
+    predict=predfn, start=start, end=end)
+  return(result)
 }

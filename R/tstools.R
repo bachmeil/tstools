@@ -443,9 +443,12 @@ seasonal.dummy <- function(x, omit=1) {
 	}
 }
 
-trend.after <- function(x, n, k=1) {
-	tmp <- ts(1:n, start=end(lag(x,-1)), frequency=frequency(x))
-	return(make.trend(tmp, k))
+trend.after <- function(x, h) {
+  if (!inherits(x, "ts")) { stop("In function trend.after, the first argument has to be a ts object") }
+  k <- if (is.matrix(x)) { ncol(x) } else { 1 }
+  n <- if (is.matrix(x)) { nrow(x)+h } else { length(x)+h }
+	tmp <- ts(1:n, start=start(x), frequency=frequency(x))
+	return(last(make.trend(tmp, k), h))
 }
 
 ## Select the best model by a criteria when dropping one of the variables

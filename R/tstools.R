@@ -219,6 +219,63 @@ tsreg <- function(y.raw, x.raw, start=NULL, end=NULL, intercept=TRUE) {
   return(result)
 }
 
+predict.tsreg <- function(obj, newdata=NULL) {
+  if (!inherits(obj, "tsreg")) { 
+    stop("predict.tsreg requires a tsreg object, which is produced by a call to tsreg") 
+  }
+  # If newdata is not specified, use the last observation of the estimation data
+  # This works well for the h-step ahead projection approach
+  if (missing(newdata) || is.null(newdata)) {
+    # This approach accounts automatically for the intercept, if present
+    return(sum(tail(model.matrix(obj), 1) * obj$coef))
+  # If newdata is a vector, assume it's a single observation
+  } else if (is.vector(newdata) && !is.list(newdata)) {
+    # Add a one for the intercept?
+    hasIntercept <- names(coefficients(obj))[1] == "(Intercept)"
+    newdata <- c(1.0, newdata)
+    if (length(newdata) != length(obj$coef)) {
+      stop("You've sent a vector to predict.tsreg. That vector has the wrong number of elements to be an observation in the dataset you used for estimation.")
+    }
+    return(sum(newdata * obj$coef))
+  } else if (is.matrix(newdata)) {
+    # Add a one for the intercept?
+    hasIntercept <- names(coefficients(obj))[1] == "(Intercept)"
+    newdata <- cbind(1.0, newdata)
+    if (ncol(newdata) != length(obj$coef)) {
+      stop("You've sent a matrix or mts to predict.tsreg. That object has the wrong number of columns to be a set of observations for the dataset you used for estimation.")
+    }
+    return(newdata %*% matrix(obj$coef, ncol=1))
+  } else if (is.data.frame(newdata)) {
+    # Treat as a matrix
+    newdata <- as.matrix(newdata)
+    hasIntercept <- names(coefficients(obj))[1] == "(Intercept)"
+    newdata <- cbind(1.0, newdata)
+    if (ncol(newdata) != length(obj$coef)) {
+      stop("You've sent a data frame to predict.tsreg. That object has the wrong number of variables to be a set of observations for the dataset you used for estimation.")
+    }
+    print(newdata)
+    print(matrix(obj$coef, ncol=1))
+    return(newdata %*% matrix(obj$coef, ncol=1))
+  } else if (is.list(newdata)) {
+    print("list...")
+    print(length(unique(sapply(z, length))) != 1)
+    # If it's a list, check that all elements have the same length and then convert to a
+    # matrix using an intermediate data frame.
+    if (length(unique(sapply(z, length)) != 1)) {
+      stop("You sent a list as the newdata argument to predict.tsreg. Not all elements of that list have the same number of elements, so there is no way to compute predictions.")
+    }
+    newdata <- as.matrix(as.data.frame(newdata))
+    hasIntercept <- names(coefficients(obj))[1] == "(Intercept)"
+    newdata <- cbind(1.0, newdata)
+    if (ncol(newdata) != length(obj$coef)) {
+      stop("You've sent a data frame to predict.tsreg. That object has the wrong number of variables to be a set of observations for the dataset you used for estimation.")
+    }
+    return(newdata %*% matrix(obj$coef, ncol=1))
+  } else {
+    stop("The newdata argument to predict.tsreg has to be a vector, matrix, mts, data frame, or list.")
+  }
+}    
+
 # add names
 asString <- function(x, nope="") {
   if (!is.character(x)) {

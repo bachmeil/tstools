@@ -253,15 +253,11 @@ predict.tsreg <- function(obj, newdata=NULL) {
     if (ncol(newdata) != length(obj$coef)) {
       stop("You've sent a data frame to predict.tsreg. That object has the wrong number of variables to be a set of observations for the dataset you used for estimation.")
     }
-    print(newdata)
-    print(matrix(obj$coef, ncol=1))
     return(newdata %*% matrix(obj$coef, ncol=1))
   } else if (is.list(newdata)) {
-    print("list...")
-    print(length(unique(sapply(z, length))) != 1)
     # If it's a list, check that all elements have the same length and then convert to a
     # matrix using an intermediate data frame.
-    if (length(unique(sapply(z, length)) != 1)) {
+    if (length(unique(sapply(z, length))) != 1) {
       stop("You sent a list as the newdata argument to predict.tsreg. Not all elements of that list have the same number of elements, so there is no way to compute predictions.")
     }
     newdata <- as.matrix(as.data.frame(newdata))

@@ -43,10 +43,23 @@ import.tsformat <- function(fn, skip=0, header=FALSE, ...) {
   }
 }
 
+import.fred.weekly <- function(name, start, fnc) {
+	data.raw <- read.csv(name, header=TRUE)
+	month <- substr(data.raw[,1], 1, 7)
+	values <- data.raw[,2]
+	monthly.values <- by(data.raw[,2], month, fnc)
+	values.vector <- sapply(monthly.values, function(z) { z[1] })
+	return(ts(values.vector, frequency=12, start=start))
+}
+
 # name: Name of the file downloaded from FRED
 # Has to be default format CSV file, including header
 # Returns ts object with correct frequency and dates
-import.fred <- function(name) {
+# Will load weekly data and aggregate to monthly or quarterly
+# Will aggregate monthly to quarterly
+# WARNING If using summation, you need to confirm the first and
+# last months are full months
+import.fred <- function(name, weekly=FALSE, agg="monthly", fnc=mean) {
   f <- file(name)
   lines <- readLines(f, n=3)
   close(f)
@@ -55,6 +68,17 @@ import.fred <- function(name) {
   year2 <- as.integer(substr(lines[3], 1, 4))
   month2 <- as.integer(substr(lines[3], 6, 7))
   data.raw <- read.csv(name, header=TRUE)
+  
+  if (weekly) {
+		result <- import.fred.weekly(name, c(year1, month1), fnc)
+		if (agg == "monthly") {
+			return(result)
+		} else if (agg == "quarterly") {
+			return(toQuarterly(result))
+		} else {
+			stop("In call to import.fred: argument 'agg' has to be 'monthly' or 'quarterly'.")
+		}
+	}
   
   if (year2 > year1) {
     if (month1 == 1) {

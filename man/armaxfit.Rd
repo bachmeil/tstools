@@ -23,7 +23,7 @@ auto=FALSE)}
 \value{Returns an S3 class object of type \code{armaxfit}. Is generally
 	only of interest for prediction purposes using \code{predict} or
 	\code{predictions}. Note that this function calls into base R's
-	\code{\arima}. It estimates a linear regression model with ARMA
+	\code{arima}. It estimates a linear regression model with ARMA
 	forecast errors. If you want to work with the coefficients of an ARX
 	model, estimate the model manually using \code{tsreg}, as that will
 	give you that coefficients you're after.}

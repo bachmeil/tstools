@@ -125,7 +125,8 @@ export(lags,
        "seasonal.dummy",
 
        "import.fred",
-       "import.tsformat"
+       "import.tsformat",
+       "pseudo.oos"
       )
 S3method(vec, list)
 S3method(forecast, dynlm)

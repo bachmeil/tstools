@@ -976,7 +976,7 @@ pctChange <- function(x, k=1) {
   if (!inherits(x, "ts")) {
     stop("Argument to pctChange has to be a ts object")
   }
-  return(diff(x, k)/x)
+  return(diff(x, k)/lag(x,-k))
 }
 
 when.max <- function(x) {

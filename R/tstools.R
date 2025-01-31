@@ -1258,7 +1258,7 @@ predict.armaxfit <- function(obj, n.ahead, newxreg=NULL, ...) {
 		nxreg <- newxreg
 	}
 	if (obj$trend > 0) {
-    nxreg <- nxreg %~% trend.after(obj$y, n.ahead, obj$trend)
+    nxreg <- nxreg %~% trend.after(obj$y, n.ahead)
 	}
 	if (obj$seasonal) {
     nxreg <- nxreg %~% dummy.after(obj$y, n.ahead)

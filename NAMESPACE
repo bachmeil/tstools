@@ -126,7 +126,8 @@ export(lags,
 
        "import.fred",
        "import.tsformat",
-       "pseudo.oos"
+       "pseudo.oos",
+       "recursive.forecast"
       )
 S3method(vec, list)
 S3method(forecast, dynlm)

@@ -1,9 +1,9 @@
 Package: tstools
 Type: Package
 Title: Time series tools
-Version: 0.923
+Version: 0.924
 Imports: forecast, sandwich, msm
-Date: 2024-11-23
+Date: 2025-02-03
 Author: Lance Bachmeier
 Maintainer: Lance Bachmeier <lanceb@ksu.edu>
 Description: Some tools that make working with time series data easier

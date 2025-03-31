@@ -1270,6 +1270,10 @@ predict.armaxfit <- function(obj, n.ahead, newxreg=NULL, ...) {
 	}
 }
 
+prediction <- function(obj, h) {
+  return(last(predictions(obj, h)))
+}
+
 predictions <- function(...) {
   return(predict(...)$pred)
 }

@@ -49,8 +49,10 @@ recursive.forecast <- function(data, f, pct=NULL, first.date=NULL, P=NULL, h=1, 
   fs <- if (is.null(window)) {
     vapply(`estimation dates`, function(z) { f(window(data, end=z)) }, FUN.VALUE=double(1))
   } else {
-    `window start date` <- start(ts(rep(NA, window+1), end=z, frequency=freq))
-    vapply(`estimation dates`, function(z) { f(window(data, start=`window start date`, end=z)) }, FUN.VALUE=double(1))
+    vapply(`estimation dates`, function(z) { 
+      `window start date` <- start(ts(rep(NA, window), end=z, frequency=freq))
+      f(window(data, start=`window start date`, end=z)) 
+    }, FUN.VALUE=double(1))
   }
   return(ts(fs, end=`last forecast date`, frequency=freq))
 }

@@ -118,6 +118,7 @@ export(lags,
        "arxfit",
        "armaxfit",
        "predictions",
+       "prediction",
        "tslasso",
        
        "dummy.after",

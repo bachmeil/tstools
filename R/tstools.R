@@ -211,9 +211,12 @@ tsreg <- function(y.raw, x.raw, start=NULL, end=NULL, intercept=TRUE) {
   }
   result$resids <- ts(residuals(fit), end=e, frequency=frequency(y))
   result$fitted <- ts(fitted(fit), end=e, frequency=frequency(y))
-  result$start <- clearDate(s)
-  result$end <- clearDate(e)
   result$int <- intercept
+  result$k <- length(coefficients(fit))
+  result$start <- s
+  result$end <- e
+  result$start_date <- clearDate(s)
+  result$end_date <- clearDate(e)
   result$nw <- try(nw.correction(fit))
   class(result) <- c("tsreg", "lm")
   return(result)

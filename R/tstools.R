@@ -219,6 +219,10 @@ tsreg <- function(y.raw, x.raw, start=NULL, end=NULL, intercept=TRUE) {
   return(result)
 }
 
+residuals.tsreg <- function(x) {
+  return(x$resids)
+}
+
 predict.tsreg <- function(obj, newdata=NULL) {
   if (!inherits(obj, "tsreg")) { 
     stop("predict.tsreg requires a tsreg object, which is produced by a call to tsreg") 

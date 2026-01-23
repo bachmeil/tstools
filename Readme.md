@@ -2,7 +2,7 @@
 
 This is an R package I created to support my undergraduate economic forecasting and graduate time series econometrics classes. The goal was to improve the user experience to the point that students could learn the methods without getting sidetracked with hacking over strange design decisions, but without turning everything into a black box. At this point, the functionality is also useful for research.
 
-The documentation is incomplete (to be generous). You may need to look at the source code to figure out what's going on.
+The documentation is incomplete. It's getting filled in by Gemini, so as you should know by now, it may not be completely accurate. Please open an issue on the Github repo if you notice a problem with the documentation. It will be hard for me to catch all documentation errors within the next five years. For undocumented functions, you may need to look at the source code to figure out what's going on, though in many cases that's easy enough.
 
 # What happened to the Bitbucket repo?
 
@@ -24,6 +24,26 @@ You should do a thorough risk assessment if you use Atlassian products in a busi
 library(devtools)
 install_github("bachmeil/tstools")
 ```
+
+# Building Locally
+
+You can clone the repo and then build locally with devtools:
+
+```
+devtools::install()
+```
+
+That command needs to be run in the top level directory of the tstools repo (the directory holding DESCRIPTION and NAMESPACE).
+
+# Building a PDF Manual
+
+On Linux, I run this command to create PDF version of the manual:
+
+```
+rm -f tstools.pdf;R CMD Rd2pdf . -o tstools.pdf
+```
+
+You need to run that command in the /man directory.
 
 # Warning
 

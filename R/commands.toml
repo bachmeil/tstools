@@ -1,0 +1,12 @@
+[tsdoc]
+description = "Document all functions within a specific line range"
+parameters = ["start", "end"]
+prompt = """
+I am providing a snippet from the file tstools.R from line {{start}} to {{end}}. 
+Please generate a .Rd file with documentation for every function defined within this specific range.
+
+Snippet:
+'''r
+!{sed -n '{{start}},{{end}}p' tstools.R}
+'''
+"""

@@ -377,7 +377,7 @@ month <- function(x) {
   return(as.integer(12*time(x)) %% 12 + 1)
 }
 
-one.month <- function(x, k) {
+extract.month <- function(x, k) {
   if (frequency(x) != 12) {
     stop("one.month can only be applied to monthly time series")
   }
@@ -390,7 +390,7 @@ quarter <- function(x) {
   return(((as.integer(12*time(x)) %% 12) %/% 3) + 1)
 }
 
-one.quarter <- function(x, k) {
+extract.quarter <- function(x, k) {
   if (frequency(x) != 4) {
     stop("one.quarter can only be applied to quarterly time series")
   }
@@ -512,7 +512,7 @@ trend.after <- function(x, h) {
 }
 
 ## Select the best model by a criteria when dropping one of the variables
-best.drop <- function(y, x, crit) {
+drop.predictor <- function(y, x, crit) {
   compare <- function(previous, new) {
     if (previous$crit < new$crit) {
       return(previous)
@@ -539,13 +539,13 @@ stepwise.selection <- function(y, x, crit=BIC) {
   cat("\nCriteria for full model: ", crit(fit), "\n")
   cat("----\n\n")
   next.mts <- function(data, unused) {
-    best.drop(y, data, crit)
+    drop.predictor(y, data, crit)
   }
   result <- Reduce(next.mts, 2:ncol(x), init=x)
   return("Finished Successfully")
 }
 
-## Return dynlm output for White corrected standard errors
+## Return lm output for White corrected standard errors
 white.correction <- function(fit) {
   se.corrected <- sqrt(diag(sandwich::vcovHC(fit)))
   coef <- coefficients(fit)
@@ -578,6 +578,7 @@ trim.na <- function(x) {
   return(result)
 }
 
+# Kept for legacy purposes. Currently works with base R.
 BIC.Arima <- function(x) {
   return(AIC(x, k=log(length(residuals(x)))))
 }
@@ -610,12 +611,12 @@ BIC.Arima <- function(x) {
   }
 }
 
-## Allow appending to the end of a ts object
-`%+%` <- function(x, y)  UseMethod("%+%")
-`%+%.ts` <- function(x, y) {
-  ts(c(as.numeric(x), y), start=start(x), frequency=frequency(x))
+# Short, convenient syntax for appending to the end of a ts object
+`%++%` <- function(x, y)  UseMethod("%++%")
+`%++%.ts` <- function(x, y) {
+  ts(c(as.numeric(x), as.numeric(y)), start=start(x), frequency=frequency(x))
 }
-`%+%.default` <- function(x, y) {
+`%++%.default` <- function(x, y) {
   c(x, y)
 }
 
@@ -690,17 +691,84 @@ min.date <- function(d1, d2) {
   }
 }
 
+# empty is what is returned if xs has no elements.
+# If empty is "error", the program stops if xs has no elements.
+# If empty is "null", returns a NULL element, not "null"
+# Otherwise returns whatever empty happens to be
+# na.action tells what to do with NA elements
+# null.action tells what to do with NULL elements
+# If convert.int is TRUE, it will treat integer values as numeric if there
+# are any double values in xs.
+# Otherwise throws an error if you're mixing integer and double elements.
+# The function confirms that all elements are scalars of the same type.
+# Only works for numeric, logical, and character (string) elements.
+# Is intended to be strict: Anything that doesn't fit the arguments above
+# is an error. Does not do any conversions not specified as explicit
+# arguments.
+listToVector <- function(xs, empty="null", 
+	na.action=c("error", "warn", "omit", "ignore"), 
+	null.action=c("error", "warn", "omit"),
+	convert.int=FALSE) {
+		# Check that it's a list and handle the empty case immediately
+		if (!is.list(xs)) { stop("Argument to listToVector is not a list") }
+		if (length(xs) == 0) {
+			if (identical(empty, "error")) {
+				stop("Argument to listToVector is empty")
+			} else if (identical(empty, "null")) {
+				return(NULL)
+			} else {
+				return(empty)
+			}
+		}
 
-listToVector <- function(xs) {
-  for (x in xs) { 
-    if (!(is.vector(x))) {
-      stop("Conversion of list to vector requires each element to be a scalar")
-    }
-    if (!(length(x) == 1)) {
-      stop("Conversion of list to vector requires each element to be a scalar")
-    }
-  }
-  return(unlist(xs))
+		# Handle cases with NA and NULL values
+		na.action <- match.arg(na.action)
+		null.action <- match.arg(null.action)
+
+		any.na <- any(is.na(xs))
+		if (na.action == "error") {
+			if (any.na) { stop("NA values in argument to listToVector") }
+		} else if (na.action == "warn") {
+			# In this case, we give a warning but let the NA pass through
+			if (any.na) { warning("NA values in argument to listToVector") }
+		} else if (na.action == "omit") {
+			if (any.na) { xs <- xs[!is.na(xs)] }
+		} # Otherwise we don't do anything
+
+		tmp.null <- which(vapply(xs, is.null, logical(1)))
+		if (length(tmp.null) > 0) {
+			if (null.action == "error") { stop("NULL values in argument to listToVector") }
+			else if (null.action == "warn") { warning("NULL values in argument to listToVector. Those values will be removed.") }
+			# Since we've killed the program if null.action is "error"
+			xs <- xs[-tmp.null]
+		}
+
+		# Now confirm that the remaining elements are all length 1
+		if (!all(vapply(xs, length, integer(1)) == 1)) { stop("Elements in argument to listToVector have to be length 1") }
+
+		# We've finally completed all the initial boilerplate type checking stuff
+		# Now we've got to check the inputs
+		# Note that NA counts as logical for some reason, so we have to convert those first
+		result <- NULL
+		if (any.na) { xs[is.na(xs)] <- as.integer(NA) }
+		int.check <- vapply(xs, is.integer, logical(1))
+		if (all(int.check)) { return(vapply(xs, identity, integer(1))) }
+		if (convert.int) {
+			if (any.na) { xs[is.na(xs)] <- as.numeric(NA) }
+			numeric.check <- vapply(xs, is.numeric, logical(1))
+			if (all(numeric.check)) { return(vapply(xs, identity, numeric(1))) }
+		} else {
+			if (any.na) { xs[is.na(xs)] <- as.numeric(NA) }
+			double.check <- vapply(xs, is.double, logical(1))
+			if (all(double.check)) { return(vapply(xs, identity, double(1))) }
+		}
+		if (any.na) { xs[is.na(xs)] <- as.logical(NA) }
+		logical.check <- vapply(xs, is.logical, logical(1))
+		if (all(logical.check)) { return(vapply(xs, identity, logical(1))) }
+		if (any.na) { xs[is.na(xs)] <- as.character(NA) }
+		character.check <- vapply(xs, is.character, logical(1))
+		if (all(character.check)) { return(vapply(xs, identity, character(1))) }
+		stop("listToVector has been called with a list with different types, or that are not double, integer, character, or logical")
 }
 
 getArimaForecast <- function(fit, n=1) {
@@ -1389,6 +1457,13 @@ collect <- function(x, name, transform, output) { UseMethod("collect") }
 # "3d" is for an array of matrices along the third dimension
 # name is for a list element, column name, or element name, depending on the type
 # A numerical index also works for name
+# If name and transform are NULL, it operates on the elements of x
+# If name is NULL and transform is not, it applies the function transform to
+# all elements of x and then collects from the resulting list
+# If name is not NULL but transform is, it pulls name from every element of x
+# and then collects from the resulting list
+# If name and transform are both not NULL, it applies transform to name of
+# every element of x, then collects from the resulting list
 collect.list <- function(x, name=NULL, transform=NULL, output="list") {
   elementByName <- function(obj, name) {
     if (is.list(obj)) {

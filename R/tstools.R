@@ -379,7 +379,7 @@ month <- function(x) {
 
 extract.month <- function(x, k) {
   if (frequency(x) != 12) {
-    stop("one.month can only be applied to monthly time series")
+    stop("extract.month can only be applied to monthly time series")
   }
   d <- as.double(x)[month(x) == k]
   y1 <- as.integer(time(x)[1])
@@ -392,7 +392,7 @@ quarter <- function(x) {
 
 extract.quarter <- function(x, k) {
   if (frequency(x) != 4) {
-    stop("one.quarter can only be applied to quarterly time series")
+    stop("extract.quarter can only be applied to quarterly time series")
   }
   d <- as.double(x)[quarter(x) == k]
   y1 <- as.integer(time(x)[1])

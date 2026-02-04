@@ -1222,10 +1222,29 @@ armafit <- function(x, ar=0, ma=0, auto=FALSE) {
   if (ar+ma < 1) { stop("Need at least one AR or MA lag in an ARMA model") }
   options(warn=2)
   result <- if (is.list(auto)) {
-  # Need to specify defaults if they're not specified
-  # Need to overwrite max.p and max.q
-		try(forecast::auto.arima(x, max.p=ar, max.q=ma, max.P=0, max.Q=0))
-		else if (auto) {
+    auto.actual <- auto
+    auto.actual[["y"]] <- x
+    auto.actual[["max.p"]] <- ar
+    auto.actual[["max.q"]] <- ma
+    # Need to specify defaults if they're not specified
+    # Need to overwrite max.p and max.q
+    if (!("max.P" %in% auto)) {
+      auto.actual[["max.P"]] <- 0
+    }
+    if (!("max.Q" %in% auto)) {
+      auto.actual[["max.Q"]] <- 0
+    }
+    if (!("d" %in% auto)) {
+      auto.actual[["d"]] <- 0
+    }
+    if (!("D" %in% auto)) {
+      auto.actual[["D"]] <- 0
+    }
+    if (!("allowdrift" %in% auto)) {
+      auto.actual[["allowdrift"]] <- FALSE
+    }
+    try(do.call(forecast::auto.arima, auto.actual))
+  } else if (auto) {
     try(forecast::auto.arima(x, max.p=ar, max.q=ma, max.P=0, max.Q=0))
   } else {
     try(arima(x, order=c(ar, 0, ma)), silent=TRUE)
@@ -1233,14 +1252,23 @@ armafit <- function(x, ar=0, ma=0, auto=FALSE) {
   if (inherits(result, "try-error")) {
     return(result)
   }
+  if (length(result$model$phi) + length(result$model$theta) == 0) {
+    stop("You used option auto with armafit, but the optimal model is ARMA(0,0). You will need to determine lag lengths yourself, or use the mean to forecast.")
+  }  
   result$raw <- result
-  if (auto) {
+  if (is.logical(auto)) {
+    if (auto) {
+      ar <- result$arma[1]
+      ma <- result$arma[2]
+    }
+  }
+  if (is.list(auto)) {
     ar <- result$arma[1]
     ma <- result$arma[2]
   }
   options(warn=0)
   result$fitted <- x - result$residuals
-  par <- armaCoef(result, x)
+  par <- armaCoef(result)
   se <- sqrt(diag(result$var.coef))[-length(par)]
   result$par <- list(intercept=as.numeric(par[1]), coef=rbind(par[-1], se, par[-1]/se))
   arnames <- if (ar < 1) {
@@ -1259,6 +1287,24 @@ armafit <- function(x, ar=0, ma=0, auto=FALSE) {
   } else {
     result$par <- result$raw
   }
+  result$mu.sample <- mean(x)
+  p <- length(result$model$phi)
+  q <- if (identical(result$model$theta, 0)) { 0 } else { length(result$model$theta) }
+  result$p <- p
+  result$q <- q
+  eq.ar <- if (p > 0) {
+    paste0(result$model$phi, " y(t-", 1:length(result$model$phi), ")", collapse=" + ")
+  } else {
+    NULL
+  }
+  eq.ma <- if (q > 0) {
+    paste0(result$model$theta, " e(t-", 1:length(result$model$theta), ")", collapse=" + ")
+  } else {
+    NULL
+  }
+  predeq <- paste0("Prediction equation: y(t) = ", result$par$intercept, " + ", 
+                          paste0(c(eq.ar, eq.ma), collapse=" + "))
+  result$predeq <- gsub("\\+ -", "- ", predeq)
   result$raw <- NULL
   attr(result$coef, "Warning Message") <- "What is reported as the intercept is actually the mean!!! You probably want $par, not $coef."
   class(result) <- c("arimafit", "Arima")
@@ -1339,7 +1385,12 @@ predictions <- function(...) {
 }
 
 print.arimafit <- function(f) {
-  print(f$par)
+  cat(f$predeq, "\n\n")
+  cat("Intercept: ", f$par$intercept, "\n")
+  cat("Sample mean: ", f$mu.sample, "\n")
+  cat("mu.mle: ", f$coef["intercept"], "\n\n")
+  cat("Coefficients:\n")
+  print(f$par$coef)
 }
 
 arma.select <- function(x, ar=integer(0), ma=integer(0), crit=AIC, combine=TRUE) {

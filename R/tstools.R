@@ -1412,28 +1412,28 @@ arma.select <- function(x, ar=0, ma=0, crit=AIC) {
     stop("You have not provided non-zero ar or ma as parameters, so I don't know what to do.")
   }
   print(lagmat)
-colnames(lagmat) <- c("AR", "MA")
-failed <- matrix(nrow=0, ncol=2)
-critmat <- apply(lagmat, MARGIN=1, function(tmp) {
-  fit <- armafit(x, tmp[1], tmp[2])
-  if (class(fit)[1] == "try-error") {
-    failed <<- rbind(failed, c(tmp[1], tmp[2]))
-    return(Inf)
-  } else {
-    return(crit(fit))
-  }
-})
-result <- list()
-result$crit <- cbind(lagmat, critmat)
-colnames(result$crit) <- c("AR", "MA", "Criteria")
-ind <- which.min(result$crit[,3])
-result$best <- c(ar=lagmat[ind,1], ma=lagmat[ind,2])
-result$ar <- ar
-result$ma <- ma
-result$failed <- failed
-colnames(result$failed) <- c("AR", "MA")
-class(result) <- "armaselect"
-return(result)
+	colnames(lagmat) <- c("AR", "MA")
+	failed <- matrix(nrow=0, ncol=2)
+	critmat <- apply(lagmat, MARGIN=1, function(tmp) {
+		fit <- armafit(x, tmp[1], tmp[2])
+		if (class(fit)[1] == "try-error") {
+			failed <<- rbind(failed, c(tmp[1], tmp[2]))
+			return(Inf)
+		} else {
+			return(crit(fit))
+		}
+	})
+	result <- list()
+	result$crit <- cbind(lagmat, critmat)
+	colnames(result$crit) <- c("AR", "MA", "Criteria")
+	ind <- which.min(result$crit[,3])
+	result$best <- c(ar=lagmat[ind,1], ma=lagmat[ind,2])
+	result$ar <- ar
+	result$ma <- ma
+	result$failed <- failed
+	colnames(result$failed) <- c("AR", "MA")
+	class(result) <- "armaselect"
+	return(result)
 }
 
 print.armaselect <- function(x) {

@@ -1221,7 +1221,11 @@ armafit <- function(x, ar=0, ma=0, auto=FALSE) {
   if (ma < 0) { stop("Cannot set MA lag length to be negative") }
   if (ar+ma < 1) { stop("Need at least one AR or MA lag in an ARMA model") }
   options(warn=2)
-  result <- if (auto) {
+  result <- if (is.list(auto)) {
+  # Need to specify defaults if they're not specified
+  # Need to overwrite max.p and max.q
+		try(forecast::auto.arima(x, max.p=ar, max.q=ma, max.P=0, max.Q=0))
+		else if (auto) {
     try(forecast::auto.arima(x, max.p=ar, max.q=ma, max.P=0, max.Q=0))
   } else {
     try(arima(x, order=c(ar, 0, ma)), silent=TRUE)

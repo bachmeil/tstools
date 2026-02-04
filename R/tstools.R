@@ -1200,40 +1200,21 @@ print.tsinfo <- function(obj) {
 
 # Convert the output of ARMA model estimation to something sensible
 # by reporting an actual intercept
-armaCoef <- function(fit, x) {
+armaCoef <- function(fit) {
   if (!inherits(fit, "Arima")) {
     stop("Argument to armaCoef has to be output of a call to arima")
   }
-  inter <- tail(fit$coef, 1)
+  mu.mle <- coef(fit)["intercept"]
   coef.ar <- fit$model$phi
-  coef.ma <- fit$model$theta
-  p <- fit$arma[1]
-  q <- fit$arma[2]
-  # Sometimes this is needed for some reason
-  if (length(coef.ar) > p) { coef.ar <- coef.ar[1:p] }
-  if (length(coef.ma) > q) { coef.ma <- coef.ma[1:q] }
-  arpart <- if (p < 1) {
-    0
-  } else {
-    ylag <- rev(tail(x, p))
-    sum(coef.ar*ylag)
+  # If no AR coefficients, the intercept is fine, so return
+  if (length(coef.ar) == 0) {
+    return(c(intercept=mu.mle, head(coef(fit), -1)))
   }
-  options(warn=2)
-  mapart <- if (q < 1) {
-    0
-  } else {
-    e <- rev(tail(residuals(fit),q))
-    output <- sum(coef.ma*e)
-  }
-  options(warn=0)
-  pred1 <- arpart + mapart
-  constant <- as.numeric(predict(fit,1)$pred - pred1)
-  result <- c(constant, coef(fit)[1:(p+q)])
-  names(result)[1] <- "intercept"
-  return(result)
+  alpha <- mu.mle*(1-sum(coef.ar))
+  return(c(intercept=alpha, head(coef(fit), -1)))
 }
 
-# Hopefully a more convenient interface
+# Hopefully a more convenient interface to arima
 # If auto is TRUE, ar and ma are the maximum lag lengths to try
 armafit <- function(x, ar=0, ma=0, auto=FALSE) {
   if (ar < 0) { stop("Cannot set AR lag length to be negative") }

@@ -1742,12 +1742,12 @@ formF <- function(varfit, constant=TRUE) {
 ##   "cols" to do so in columns
 iterate <- function(fmat, start, h, cumulate="none") {
   if (cumulate == "none") {
-    return(matPower(F, h) %*% start)
+    return(matPower(fmat, h) %*% start)
   } else if (cumulate == "rows") {
     result <- matrix(start, nrow=1)
     current <- start
     for (ii in 1:h) {
-      current <- F %*% current
+      current <- fmat %*% current
       result <- rbind(result, matrix(current, nrow=1))
     }
     return(result)
@@ -1755,7 +1755,7 @@ iterate <- function(fmat, start, h, cumulate="none") {
     result <- matrix(start, ncol=1)
     current <- start
     for (ii in 1:h) {
-      current <- F %*% current
+      current <- fmat %*% current
       result <- cbind(result, matrix(current, ncol=1))
     }
     return(result)
